@@ -76,12 +76,25 @@ async def on_ready():
 # Erreures générales
 @bot.event
 async def on_command_error(contexte, error):
+    # Si la commande n'existe pas
     if isinstance(error, discord.ext.commands.errors.CommandNotFound):
         await contexte.send(f"Commande invalide! Utilisez **{BOT_COMMAND_PREFIX}aide** pour afficher la liste des commandes disponibles")
         logging.info(f"Commande invalide de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
-    # Afficher message d'exception si en niveau DEBUG
-    elif LOGGING_LEVEL == 10:
-        print(traceback.print_exception(type(error), error, error.__traceback__))
+    
+    # Si argument(s) manquant(s)
+    elif isinstance(error, discord.ext.commands.errors.MissingRequiredArgument):
+        await contexte.send(f"Syntaxe invalide!")
+    
+    # Si en cooldown
+    elif isinstance(error, discord.ext.commands.CommandOnCooldown):
+        await contexte.send(f"Veuillez patienter {error.retry_after:.2f}s")
+
+    # Si erreur inconnue
+    else:
+        await contexte.send(f"Une erreur inconnue est survenue! Veuillez contacter l'administrateur du bot pour signaler cette erreur.")
+        # Afficher message d'exception si en niveau DEBUG
+        if LOGGING_LEVEL == 10:
+            print(traceback.print_exception(type(error), error, error.__traceback__))
 
 
 # Vérifie si la date est valide
@@ -117,11 +130,15 @@ def credentials_check(username, password, cn, cv):
     if login_data['code'] == 200:
         token = login_data["token"]
         eleve_id = login_data["data"]["accounts"][0]["id"]
-        return {"token": token, "eleve_id": eleve_id}
+        return {"code": 200,
+                "token": token,
+                "eleve_id": eleve_id}
     
-    # Si identifiants changés
-    if login_data['code'] == 505:
-        return ()
+    # Si authentification échouée
+    else:
+        return {"code": login_data['code'],
+                "token": None,
+                "eleve_id": None}
 
 
 # Aide
@@ -172,6 +189,17 @@ async def login(contexte, username, password):
         # Message de connexion ratée
         titre = ':x:  **Connexion ratée!**'
         message = "Identifiant et/ou mot de passe invalide!"
+
+        embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+        await contexte.send(embed=embed)
+
+        logging.info(f"Echec de l'authentification de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
+
+    # Si tentative de connexion effectuée pendant vacances scolaires
+    if reponse_json['code'] == 535:
+        # Message de connexion ratée
+        titre = ':x:  **Connexion ratée!**'
+        message = "Connexion impossible pendant les vacances scolaires! Veuillez réessayer plus tard !"
 
         embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
         await contexte.send(embed=embed)
@@ -324,14 +352,27 @@ async def cdt(contexte, date):
     # Vérifie la validité des identifiants et obtenir token et ID d'élève
     message_attente = await contexte.send(":hourglass: Veuillez patienter...")   
     api_credentials = credentials_check(username, password, cn, cv)
-    if not api_credentials:
+
+    # En cas d'erreur
+    if api_credentials["code"] != 200:
         # Effacer le message d'attente
         await message_attente.delete()
 
-        # Message d'identifiants changés
-        logging.info(f"Echec de l'authentification de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
-        await contexte.send(f"Identifiant et/ou mot de passe changés! Veuillez **{BOT_COMMAND_PREFIX}logout** puis **{BOT_COMMAND_PREFIX}login**")
-        return None
+        # En cas d'identifiants changés
+        if api_credentials["code"] == 505:
+            titre = ":x:  **Erreur**"
+            message = "Identifiant et/ou mot de passe changés! Veuillez **" + BOT_COMMAND_PREFIX + "logout** puis **" + BOT_COMMAND_PREFIX + "login**"
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
+
+        # Si en période de vacances scolaires
+        if api_credentials["code"] == 535:
+            titre = ":x:  **Erreur**"
+            message = "EcoleDirecte n'est pas disponible pendant les vacances scolaires! Veuillez réessayer plus tard."
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
 
     # Obtenir les infos pour l'API
     token = api_credentials["token"]
@@ -388,14 +429,27 @@ async def edt(contexte, date):
     # Vérifie la validité des identifiants et obtenir token et ID d'élève
     message_attente = await contexte.send(":hourglass: Veuillez patienter...")   
     api_credentials = credentials_check(username, password, cn, cv)
-    if not api_credentials:
+    
+    # En cas d'erreur
+    if api_credentials["code"] != 200:
         # Effacer le message d'attente
         await message_attente.delete()
 
-        # Message d'identifiants changés
-        logging.info(f"Echec de l'authentification de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
-        await contexte.send(f"Identifiant et/ou mot de passe changés! Veuillez **{BOT_COMMAND_PREFIX}logout** puis **{BOT_COMMAND_PREFIX}login**")
-        return None
+        # En cas d'identifiants changés
+        if api_credentials["code"] == 505:
+            titre = ":x:  **Erreur**"
+            message = "Identifiant et/ou mot de passe changés! Veuillez **" + BOT_COMMAND_PREFIX + "logout** puis **" + BOT_COMMAND_PREFIX + "login**"
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
+
+        # Si en période de vacances scolaires
+        if api_credentials["code"] == 535:
+            titre = ":x:  **Erreur**"
+            message = "EcoleDirecte n'est pas disponible pendant les vacances scolaires! Veuillez réessayer plus tard."
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
 
     # Obtenir les infos pour l'API
     token = api_credentials["token"]
@@ -453,14 +507,27 @@ async def vie_scolaire(contexte):
     # Vérifie la validité des identifiants et obtenir token et ID d'élève
     message_attente = await contexte.send(":hourglass: Veuillez patienter...")   
     api_credentials = credentials_check(username, password, cn, cv)
-    if not api_credentials:
+    
+    # En cas d'erreur
+    if api_credentials["code"] != 200:
         # Effacer le message d'attente
         await message_attente.delete()
 
-        # Message d'identifiants changés
-        logging.info(f"Echec de l'authentification de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
-        await contexte.send(f"Identifiant et/ou mot de passe changés! Veuillez **{BOT_COMMAND_PREFIX}logout** puis **{BOT_COMMAND_PREFIX}login**")
-        return
+        # En cas d'identifiants changés
+        if api_credentials["code"] == 505:
+            titre = ":x:  **Erreur**"
+            message = "Identifiant et/ou mot de passe changés! Veuillez **" + BOT_COMMAND_PREFIX + "logout** puis **" + BOT_COMMAND_PREFIX + "login**"
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
+
+        # Si en période de vacances scolaires
+        if api_credentials["code"] == 535:
+            titre = ":x:  **Erreur**"
+            message = "EcoleDirecte n'est pas disponible pendant les vacances scolaires! Veuillez réessayer plus tard."
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
     
     # Effacer le message d'attente
     await message_attente.delete()
@@ -606,17 +673,27 @@ async def notes(contexte):
     # Vérifie la validité des identifiants et obtenir token et ID d'élève
     message_attente = await contexte.send(":hourglass: Veuillez patienter...")   
     api_credentials = credentials_check(username, password, cn, cv)
-    if not api_credentials:
+    
+    # En cas d'erreur
+    if api_credentials["code"] != 200:
         # Effacer le message d'attente
         await message_attente.delete()
 
-        # Message d'identifiants changés
-        logging.info(f"Echec de l'authentification de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
-        await contexte.send(f"Identifiant et/ou mot de passe changés! Veuillez **{BOT_COMMAND_PREFIX}logout** puis **{BOT_COMMAND_PREFIX}login**")
-        return None
+        # En cas d'identifiants changés
+        if api_credentials["code"] == 505:
+            titre = ":x:  **Erreur**"
+            message = "Identifiant et/ou mot de passe changés! Veuillez **" + BOT_COMMAND_PREFIX + "logout** puis **" + BOT_COMMAND_PREFIX + "login**"
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
 
-    # Effacer le message d'attente
-    await message_attente.delete()
+        # Si en période de vacances scolaires
+        if api_credentials["code"] == 535:
+            titre = ":x:  **Erreur**"
+            message = "EcoleDirecte n'est pas disponible pendant les vacances scolaires! Veuillez réessayer plus tard."
+            embed = discord.Embed(title=titre, description=message, color=EMBED_COLOR)
+            await contexte.send(embed=embed)
+            return
 
     # Obtenir les infos pour l'API
     token = api_credentials["token"]
