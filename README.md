@@ -47,13 +47,12 @@ Possède plusieurs fonctionnalités telles que :
 Vous aurez besoin des outils suivants :
 
 - Python 3 : Disponible [ici](https://www.python.org/)
-- `git` : Disponible [ici](https://git-scm.com/downloads)
-- Module `discord` : `pip3 install discord.py`
-- Module `cryptography` : `pip3 install cryptography`
-- Module `requests` : `pip3 install requests`
-- Module `yaml` : `pip3 install pyyaml`
+- Git : Disponible [ici](https://git-scm.com/downloads)
+- discord.py :`pip3 install discord.py`
+- PyCryptodome : `pip3 install pycryptodomex`
+- Requests : `pip3 install requests`
 
-Vous pouvez aussi installer les modules en même temps en exécutant : `pip3 install -r requirements.txt`
+Vous pouvez installer les modules en même temps en exécutant : `pip3 install -r requirements.txt`
 
 ### Installation
 
@@ -81,7 +80,7 @@ Sur Discord, tapez la commande `!aide`, si tout est bien configuré, le bot devr
 
 ### Fichier de configuration
 
-Vous pouvez changer facilement les paramètres du bot en modifiant le fichier `config.yaml`.
+Vous pouvez changer facilement les paramètres du bot en modifiant le fichier `config.ini`.
 
 <h2 id="contribuer">Contribuer</h2>
 
