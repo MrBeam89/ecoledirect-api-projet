@@ -113,10 +113,11 @@ def date_valide(input_string):
 def credentials_fetch(id):
     user_info = db_handler.fetch_user_info(id)
     if user_info:
-        username = aes.decrypt_aes(user_info[2], keygen.getkey())
-        password = aes.decrypt_aes(user_info[3], keygen.getkey())
-        cn = aes.decrypt_aes(user_info[4], keygen.getkey())
-        cv = aes.decrypt_aes(user_info[5], keygen.getkey())
+        aes_cipher = aes.AESCipher(keygen.getkey())
+        username = aes_cipher.decrypt(user_info[2]).decode('utf-8')
+        password = aes_cipher.decrypt(user_info[3]).decode('utf-8')
+        cn = aes_cipher.decrypt(user_info[4]).decode('utf-8')
+        cv = aes_cipher.decrypt(user_info[5]).decode('utf-8')
         return (username, password, cn, cv)
     else:
         return ()
@@ -282,10 +283,11 @@ async def login(contexte, username, password):
         reponse_json = reponse.json()
 
         # Ajout des identifiants chiffrés dans la base de données
-        encrypted_username = aes.encrypt_aes(username, keygen.getkey())
-        encrypted_password = aes.encrypt_aes(password, keygen.getkey())
-        encrypted_cn = aes.encrypt_aes(cn, keygen.getkey())
-        encrypted_cv = aes.encrypt_aes(cv, keygen.getkey())
+        aes_cipher = aes.AESCipher(keygen.getkey())
+        encrypted_username = aes_cipher.encrypt(username.encode('utf-8'))
+        encrypted_password = aes_cipher.encrypt(password.encode('utf-8'))
+        encrypted_cn = aes_cipher.encrypt(cn.encode('utf-8'))
+        encrypted_cv = aes_cipher.encrypt(cv.encode('utf-8'))
 
         logging.info(f"Ajout des informations de l'utilisateur {contexte.author.name} avec l'id {contexte.author.id}")
         db_handler.add_user_info(contexte.author.id, encrypted_username, encrypted_password, encrypted_cn, encrypted_cv)
