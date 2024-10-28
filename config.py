@@ -18,25 +18,26 @@ import yaml
 import re
 from os.path import basename
 
+import configparser
+
 ECOLEDIRECTE_DIR = __file__.rstrip(basename(__file__))
-CONFIG_FILENAME = f"config.yaml"
+CONFIG_FILENAME = f"config.ini"
 
 def get_config():
     # Vérification fichier de configuration
     try:
-        with open(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}", "r") as config_file:
-            config = yaml.safe_load(config_file)
-            print(f'Ouverture du fichier "{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}" réussie!')
-            BOT_TOKEN_FILENAME = config["BOT_TOKEN_FILENAME"]
-            DB_KEY_FILENAME = config['DB_KEY_FILENAME']
-            DB_FILENAME = config["DB_FILENAME"]
-            BOT_COMMAND_PREFIX = config["BOT_COMMAND_PREFIX"]
-            LOGGING_LEVEL = config["LOGGING_LEVEL"]
-            COOLDOWN = config["COOLDOWN"]
-            EMBED_COLOR = config["EMBED_COLOR"]
-            ZIP_SOURCE_CODE_FILENAME = config["ZIP_SOURCE_CODE_FILENAME"]
+        config = configparser.ConfigParser()
+        config.read(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}")
 
-            config_file.close()
+        print(f'Ouverture du fichier "{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}" réussie!')
+        BOT_TOKEN_FILENAME = config["Files"]["BOT_TOKEN_FILENAME"]
+        DB_KEY_FILENAME = config["Files"]['DB_KEY_FILENAME']
+        DB_FILENAME = config["Files"]["DB_FILENAME"]
+        BOT_COMMAND_PREFIX = config["Bot"]["BOT_COMMAND_PREFIX"]
+        LOGGING_LEVEL = config["Bot"]["LOGGING_LEVEL"]
+        COOLDOWN = config["Bot"]["COOLDOWN"]
+        EMBED_COLOR = config["Bot"]["EMBED_COLOR"]
+        ZIP_SOURCE_CODE_FILENAME = config["Files"]["ZIP_SOURCE_CODE_FILENAME"]
 
     except FileNotFoundError:
         print(f'"{CONFIG_FILENAME}" est introuvable!')
@@ -84,45 +85,38 @@ def get_config():
         print("Préfixe de commande de bot valide!")
 
     # Vérification du niveau de journalisation
-    if not isinstance(LOGGING_LEVEL, int):
+    try:
+        LOGGING_LEVEL = int(LOGGING_LEVEL)
+    except ValueError:
         print("Niveau de journalisation invalide!")
         input("Appuyez sur Entree pour quitter...")
         exit()
-    else:
-        print("Niveau de journalisation valide!")
+    print("Niveau de journalisation valide!")
 
     # Vérification du cooldown
-    if not isinstance(COOLDOWN, int):
+    try:
+        COOLDOWN = int(COOLDOWN)
+    except ValueError:
         print("Cooldown invalide!")
         input("Appuyez sur Entree pour quitter...")
         exit()
-    else:
-        print("Cooldown valide!")
+    print("Cooldown valide!")
 
     # Vérification de la couleur de l'embed
-    if not isinstance(EMBED_COLOR, int):
+    try:
+        int(EMBED_COLOR, 16)
+    except ValueError:
+        print("Couleur de l'embed invalide!")
+        input("Appuyez sur Entree pour quitter...")
+        exit()
+
+    color_pattern = re.compile("^0x[0-9a-fA-F]{6}$")
+    if not color_pattern.match(EMBED_COLOR):
         print("Couleur de l'embed invalide!")
         input("Appuyez sur Entree pour quitter...")
         exit()
     else:
-        # Vérifie si le format 0x?????? est respecté (ignore les zéros en trop)
-        hex_str = format(EMBED_COLOR, '06x')
-        if len(hex_str) != 6:
-            print("Couleur de l'embed invalide!")
-            input("Appuyez sur Entree pour quitter...")
-            exit()
-
-        else:
-            # Vérifie si le code couleur est valide
-            r = int(hex_str[0:2], 16)
-            v = int(hex_str[2:4], 16)
-            b = int(hex_str[4:6], 16)
-            if 0 <= r <= 255 and 0 <= v <= 255 and 0 <= b <= 255:
-                print("Couleur de l'embed valide!")
-            else:
-                print("Couleur de l'embed invalide!")
-                input("Appuyez sur Entree pour quitter...")
-                exit()
+        print("Couleur de l'embed valide!")
 
     # Vérification du nom de fichier du ZIP du code source
     if not isinstance(ZIP_SOURCE_CODE_FILENAME, str):
@@ -134,4 +128,16 @@ def get_config():
 
     # Renvoie la configuration
     print("Configuration valide!")
-    return config
+    
+    return {
+        "ECOLEDIRECTE_DIR": ECOLEDIRECTE_DIR,
+        "BOT_TOKEN_FILENAME": BOT_TOKEN_FILENAME,
+        "DB_KEY_FILENAME": DB_KEY_FILENAME,
+        "DB_FILENAME": DB_FILENAME,
+        "CONFIG_FILENAME": CONFIG_FILENAME,
+        "BOT_COMMAND_PREFIX": BOT_COMMAND_PREFIX,
+        "LOGGING_LEVEL": LOGGING_LEVEL,
+        "COOLDOWN": COOLDOWN,
+        "EMBED_COLOR": int(EMBED_COLOR, 16),
+        "ZIP_SOURCE_CODE_FILENAME": ZIP_SOURCE_CODE_FILENAME
+    }

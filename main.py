@@ -35,6 +35,7 @@ print(f"{'-'*40}\nEcoleDirecte Bot (v0.9.0b) par MrBeam89_\n{'-'*40}")
 
 # Récupération de la configuration
 BOT_CONFIG = config.get_config()
+print(BOT_CONFIG)
 BOT_TOKEN_FILENAME = BOT_CONFIG["BOT_TOKEN_FILENAME"]
 DB_KEY_FILENAME = BOT_CONFIG["DB_KEY_FILENAME"]
 DB_FILENAME = BOT_CONFIG["DB_FILENAME"]

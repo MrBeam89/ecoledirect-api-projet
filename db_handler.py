@@ -15,15 +15,16 @@
 #    along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import sqlite3
-import yaml
-from config import CONFIG_FILENAME, ECOLEDIRECTE_DIR
+import configparser
 from os.path import basename
 
-# Obtenir le nom de la base de données
-config_file = open(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}", "r")
-config = yaml.safe_load(config_file)
+from config import CONFIG_FILENAME, ECOLEDIRECTE_DIR
 
-DB_FILENAME = config["DB_FILENAME"]
+# Obtenir le nom de la base de données
+config = configparser.ConfigParser()
+config.read(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}")
+
+DB_FILENAME = config["Files"]["DB_FILENAME"]
 DB_ABSOLUTE_PATH = f"{ECOLEDIRECTE_DIR}{DB_FILENAME}"
 
 # Créer la base de données et ajouter la table si elle n'existe pas

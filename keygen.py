@@ -14,17 +14,16 @@
 #    You should have received a copy of the GNU Affero General Public License
 #    along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-import yaml
+import configparser
 from secrets import token_bytes
 
 from config import CONFIG_FILENAME, ECOLEDIRECTE_DIR
 
 def getkey()->bytes:
     # Obtenir le nom du fichier de la clé dans la config
-    DB_KEY_FILENAME = None
-    with open(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}", "r") as config_file:
-        config = yaml.safe_load(config_file)
-        DB_KEY_FILENAME = config["DB_KEY_FILENAME"]
+    config = configparser.ConfigParser()
+    config.read(f"{ECOLEDIRECTE_DIR}{CONFIG_FILENAME}")
+    DB_KEY_FILENAME = config["Files"]["DB_KEY_FILENAME"]
 
     # Création/récupération de la clé
     try:

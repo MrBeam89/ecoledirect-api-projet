@@ -1,5 +1,4 @@
 discord.py
 pycryptodomex
 requests
-pyyaml
 GitPython
