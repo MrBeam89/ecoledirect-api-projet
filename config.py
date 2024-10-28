@@ -64,7 +64,7 @@ def get_config():
         print(f'Fichier introuvable! Création d\'une nouvelle clé dans le fichier "{ECOLEDIRECTE_DIR}{DB_KEY_FILENAME}"...')
         getkey()
         print(f'Création d\'une nouvelle clé dans le fichier "{ECOLEDIRECTE_DIR}{DB_KEY_FILENAME}" réussie!')
-        print("/!\ ATTENTION /!\ La base de données (si non vide) ne fonctionnera pas correctement avec la nouvelle clé.")
+        print(r"/!\ ATTENTION /!\ La base de données (si non vide) ne fonctionnera pas correctement avec la nouvelle clé.")
 
     # Vérification du fichier de la base de données
     try:
