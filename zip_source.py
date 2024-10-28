@@ -18,20 +18,11 @@ import os
 import tempfile
 import git
 import zipfile
+import subprocess
 
 from config import ECOLEDIRECTE_DIR
 
 TEMP_DIR = tempfile.gettempdir() # Chemin d'accès du répertoire temporaire pour stocker l'archive
-
-# Obtenir les noms de fichiers dans le dossier ECOLEDIRECTE_DIR
-filenames = os.listdir(ECOLEDIRECTE_DIR)
-
-# Obtenir les chemins absolus des fichiers dans le dossier ECOLEDIRECTE_DIR
-abs_filepaths = [os.path.join(ECOLEDIRECTE_DIR, filename) for filename in filenames]
-
-# Obtenir les chemins d'accès à ignorer
-repo = git.Repo(ECOLEDIRECTE_DIR)
-ignored_paths = repo.git.check_ignore(abs_filepaths)
 
 
 # Supprimer l'archive ZIP du code source
@@ -45,26 +36,16 @@ def delete_zip_source(zip_filename):
 
 # Créer l'archive ZIP du code source
 def create_zip_source(zip_filename):
-    # Stocker l'archive ZIP dans le répertoire temporaire
-    zfile_filepath = os.path.join(TEMP_DIR, zip_filename)
+    # Obtenir les fichiers à inclure dans l'archive (sans ceux spécifiés dans le fichier .gitignore)
+    files_to_zip = subprocess.check_output(['git', '-C', ECOLEDIRECTE_DIR, 'ls-files'], text=True).splitlines()
 
-    # Ne pas recréer l'archive si elle a déjà été créée
-    if os.path.exists(zfile_filepath):
-        return zfile_filepath
+    # Chemin d'accès à l'archive (stockée dans le répertoire temporaire)
+    temp_zip_filepath = os.path.join(TEMP_DIR, zip_filename)
 
-    # Créer l'archive ZIP
-    zfile =  zipfile.ZipFile(zfile_filepath, 'w', zipfile.ZIP_DEFLATED)
+    # Ajouter les fichiers à l'archive
+    with zipfile.ZipFile(temp_zip_filepath, 'w') as zip_file:
+        for file in files_to_zip:
+            zip_file.write(file)
 
-    # Pour chaque fichier dans le répertoire du bot
-    for i in range(len(filenames)):
-        filename = filenames[i]
-        abs_filepath = abs_filepaths[i]
-
-        # Si le fichier est à ignorer, passer le reste de la boucle
-        if filename in ignored_paths: continue
-
-        # Ajouter le fichier à l'archive
-        zfile.write(abs_filepath, filename)
-
-    # Renvoyer le chemin d'accès de l'archive pour utilisation ultérieure
-    return zfile_filepath
+    # Retourner le chemin d'accès à l'archive
+    return temp_zip_filepath

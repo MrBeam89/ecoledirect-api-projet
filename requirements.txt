@@ -1,4 +1,3 @@
 discord.py
 pycryptodomex
 requests
-GitPython
