@@ -35,7 +35,6 @@ print(f"{'-'*40}\nEcoleDirecte Bot (v0.9.0b) par MrBeam89_\n{'-'*40}")
 
 # Récupération de la configuration
 BOT_CONFIG = config.get_config()
-print(BOT_CONFIG)
 BOT_TOKEN_FILENAME = BOT_CONFIG["BOT_TOKEN_FILENAME"]
 DB_KEY_FILENAME = BOT_CONFIG["DB_KEY_FILENAME"]
 DB_FILENAME = BOT_CONFIG["DB_FILENAME"]
@@ -703,7 +702,6 @@ async def notes(contexte):
     eleve_id = api_credentials["eleve_id"]
 
     # Obtenir les données des notes
-    message_attente = await contexte.send(":hourglass: Veuillez patienter...")
     notes_data = ecoledirecte.notes(eleve_id, token).json()["data"]
     notes = notes_data["notes"]
 
