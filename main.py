@@ -601,10 +601,10 @@ async def vie_scolaire(contexte):
         for absence in absences:
             date = absence["displayDate"]
             if absence["justifie"] == True:
-                justifiee = "Oui"
+                justifie = "Oui"
             else:
-                justifiee = "Non"
-            message += f"- {date}. Justifiée ? **{justifiee}**\n"
+                justifie = "Non"
+            message += f"- {date}. Justifiée ? **{justifie}**\n"
 
         if not message:
             message += ":tada: **Félicitations!**"
@@ -616,11 +616,11 @@ async def vie_scolaire(contexte):
         for retard in retards:
             date = retard["displayDate"]
             duree = retard["libelle"]
-            if retard["justifiee"]:
-                justifiee = "Oui"
+            if retard["justifie"]:
+                justifie = "Oui"
             else:
-                justifiee = "Non"
-            message += f"- {date} de {duree}. Justifiée ? **{justifiee}**\n"
+                justifie = "Non"
+            message += f"- {date} de {duree}. Justifié ? **{justifie}**\n"
 
         if not message:
             message += ":tada: **Félicitations!**"
