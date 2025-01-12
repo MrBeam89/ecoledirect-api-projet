@@ -16,7 +16,6 @@
 
 import os
 import tempfile
-import git
 import zipfile
 import subprocess
 
